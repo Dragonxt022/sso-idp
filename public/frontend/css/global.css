@@ -1,0 +1,21 @@
+body { font-family: 'Figtree', sans-serif; }
+
+@media (max-width: 500px) {
+      .card {
+        @apply bg-transparent shadow-none;
+      }
+    }
+
+/* tailwind.css ou global.css */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE e Edge */
+  scrollbar-width: none;    /* Firefox */
+}
+
+body {
+  background-color: #F3F8F3;
+}
