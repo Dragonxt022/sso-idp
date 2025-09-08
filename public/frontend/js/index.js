@@ -59,7 +59,11 @@ function filtraApps() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("perfil").addEventListener("click", function () {
-        window.location.href = "/perfil";
-    });
+    const perfilBtn = document.getElementById("perfil");
+    if (perfilBtn) {
+        perfilBtn.addEventListener("click", function () {
+            window.location.href = "/perfil";
+        });
+    }
 });
+

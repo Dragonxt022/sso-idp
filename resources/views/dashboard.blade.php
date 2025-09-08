@@ -7,9 +7,9 @@
             <div id="perfil" class="flex flex-row justify-start items-center gap-5 mb-4 cursor-pointer group">
 
                 <div class="w-12 h-12 rounded-full overflow-hidden shadow-xl">
-                    <img src="{{ asset('frontend/profiles/' . $user->profile_photo_path) }}"
-                        class="w-full h-full object-cover group-hover:scale-115 transition-transform duration-700"
-                        alt="Foto de {{ $user->name }}">
+                    <img src="{{ $user->profile_photo_path ? asset('frontend/profiles/' . $user->profile_photo_path) : asset('frontend/img/user.png') }}"
+                        onerror="this.onerror=null;this.src='{{ asset('frontend/img/user.png') }}';"
+                        class="w-12 h-12 rounded-full group-hover:scale-105 group-hover:shadow-md transition-all duration-700" />
                 </div>
 
                 <div class="text-green-700 text-xl font-semibold group-hover:text-green-600 transition-colors duration-300">
@@ -17,7 +17,7 @@
                 </div>
             </div>
             <div>
-                @if ($user->hasRole('Franqueadora'))
+                @if ($user->hasRole('Desenvolvedor'))
                     <a href="{{ route('config.index') }}">
                         <img src="{{ asset('frontend/img/settings.png') }}"
                             class="h-6 w-6 hover:cursor-pointer hover:scale-110 hover:rotate-180 transition-transform duration-300" />
@@ -39,93 +39,30 @@
     <div id="cards"
         class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 opacity-0 translate-y-4 transition-all duration-700">
 
-        <a href="https://login.taiksu.com.br/?redirect_uri=https://admin.taiksu.com.br/callback">
-            <div
-                class="bg-white rounded-xl px-6 py-8 group shadow-sm hover:shadow-xl transition duration-300 justify-center">
-                <img src="{{ asset('frontend/img/apps/erp.png') }}" class="w-12 h-12 mx-auto mb-4">
-                <p class="nome text-lg text-gray-600 text-center">ERP Taiksu</p>
-            </div>
-        </a>
-
-        <!-- Painel da franqueadora -->
-        @if ($user->hasRole('Franqueadora'))
-            <a href="https://login.taiksu.com.br/?redirect_uri=https://franqueadora.taiksu.com.br/callback">
+        @forelse($applications as $app)
+            <a href="{{ $app->active ? $app->link_redirect ?? '#' : '#' }}"
+                class="card-link {{ $app->active ? '' : 'opacity-40 pointer-events-none' }}">
                 <div
-                    class="bg-white rounded-xl px-6 py-8 group shadow-sm hover:shadow-xl transition duration-300 justify-center">
-                    <img src="{{ asset('frontend/img/apps/backoffice.png') }}" class="w-12 h-12 mx-auto mb-4">
-                    <p class="nome text-lg text-gray-600 text-center">Backoffice</p>
+                    class="bg-white rounded-xl px-6 py-8 group shadow-sm hover:shadow-xl transition duration-300 justify-center text-center">
+
+                    @if ($app->icon)
+                        <img src="{{ asset($app->icon) }}"
+                            class="w-12 h-12 mx-auto mb-4 {{ $app->active ? '' : 'opacity-40' }}"
+                            alt="{{ $app->name }}">
+                    @else
+                        <div
+                            class="w-12 h-12 mx-auto mb-4 bg-gray-100 rounded flex items-center justify-center {{ $app->active ? '' : 'opacity-40' }}">
+                            <span class="text-gray-400">{{ strtoupper(substr($app->name, 0, 1)) }}</span>
+                        </div>
+                    @endif
+
+                    <p class="nome text-lg text-gray-600 text-center {{ $app->active ? '' : 'opacity-40' }}">
+                        {{ $app->name }}
+                    </p>
                 </div>
             </a>
-        @endif
-
-        <!-- Atualmente manda pro ERP, daqui um tempo vai ser loja dedicada-->
-        <a href="https://admin.taiksu.com.br/franqueado/pedidos">
-            <div
-                class="bg-white rounded-xl px-6 py-8 group shadow-sm hover:shadow-xl transition duration-300 justify-center">
-                <img src="{{ asset('frontend/img/apps/loja.png') }}" class="w-12 h-12 mx-auto mb-4">
-                <p class="nome text-lg text-gray-600 text-center">Loja</p>
-            </div>
-        </a>
-
-
-        <!-- Esta aplicação está em deenvolvimento-->
-        <a>
-            <div class="bg-white rounded-xl px-6 py-8 group transition duration-300 justify-center">
-                <img src="{{ asset('frontend/img/apps/curriculos.png') }}" class=" w-12 h-12 mx-auto mb-4 opacity-50">
-                <p class="nome text-lg text-gray-600 text-center">Currículos</p>
-            </div>
-        </a>
-
-        <!-- Aqui tá top-->
-        <a href="https://login.taiksu.com.br/?redirect_uri=https://vistoria.taiksu.com.br/callback">
-            <div
-                class="bg-white rounded-xl px-6 py-8 group shadow-sm hover:shadow-xl transition duration-300 justify-center">
-                <img src="{{ asset('frontend/img/apps/vistorias.png') }}" class="w-12 h-12 mx-auto mb-4">
-                <p class="nome text-lg text-gray-600 text-center">Vistoria</p>
-            </div>
-        </a>
-
-        @if ($user->hasRole('Franqueadora'))
-        <a href="https://mail.hostinger.com">
-            <div
-                class="bg-white rounded-xl px-6 py-8 group shadow-sm hover:shadow-xl transition duration-300 justify-center">
-                <img src="{{ asset('frontend/img/apps/mail.png') }}" class="w-12 h-12 mx-auto mb-4">
-                <p class="nome text-lg text-gray-600 text-center">E-mail</p>
-            </div>
-        </a>
-        @endif
-
-        <a href="https://arquivos.taiksu.com.br/s/P5nypCADKccgcib">
-            <div
-                class="bg-white rounded-xl px-6 py-8 group shadow-sm hover:shadow-xl transition duration-300 justify-center">
-                <img src="{{ asset('frontend/img/apps/midia.png') }}" class="w-12 h-12 mx-auto mb-4">
-                <p class="nome text-lg text-gray-600 text-center">Mídias</p>
-            </div>
-        </a>
-
-        <a href="#">
-            <div
-                class="bg-white rounded-xl px-6 py-8 group transition duration-300 justify-center">
-                <img src="{{ asset('frontend/img/apps/consumo.png') }}" class="w-12 h-12 mx-auto mb-4 opacity-50">
-                <p class="nome text-lg text-gray-600 text-center">Consumo</p>
-            </div>
-        </a>
-
-        <a href="#">
-            <div
-                class="bg-white rounded-xl px-6 py-8 group transition duration-300 justify-center">
-                <img src="{{ asset('frontend/img/apps/equipe.png') }}" class="w-12 h-12 mx-auto mb-4 opacity-50">
-                <p class="nome text-lg text-gray-600 text-center">Equipe</p>
-            </div>
-        </a>
-
-        <a href="https://admin.taiksu.com.br/franqueado/supervisao-residos">
-            <div
-                class="bg-white rounded-xl px-6 py-8 group shadow-sm hover:shadow-xl transition duration-300 justify-center">
-                <img src="{{ asset('frontend/img/apps/lixo.png') }}" class="w-12 h-12 mx-auto mb-4">
-                <p class="nome text-lg text-gray-600 text-center">Resíduos</p>
-            </div>
-        </a>
-
+        @empty
+            <p class="text-gray-500">Nenhum aplicativo disponível para o seu perfil.</p>
+        @endforelse
     </div>
 @endsection

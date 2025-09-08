@@ -21,11 +21,19 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'id',
         'name',
         'email',
         'password',
         'cpf',
-
+        'unidade_id',
+        'profile_photo_path',
+        'email_verified_at',
+        'remember_token',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+        'pin',
 
     ];
 
@@ -50,5 +58,10 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function unidade()
+    {
+        return $this->belongsTo(InforUnidade::class, 'unidade_id');
     }
 }

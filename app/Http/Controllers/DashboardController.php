@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Laravel\Passport\Token;
 use App\Models\User;
+use App\Models\Application; // no topo do controller
 
 
 class DashboardController extends Controller
@@ -12,7 +13,19 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        return view('dashboard', compact('user'));
+
+        // ids das roles do usuário
+        $roleIds = $user->roles->pluck('id')->toArray();
+
+        $applications = Application::with('roles')
+            // ->whereDoesntHave('roles') // apps públicos
+            ->orWhereHas('roles', function ($query) use ($roleIds) {
+                $query->whereIn('roles.id', $roleIds);
+            })
+            ->orderBy('order')
+            ->get();
+
+        return view('dashboard', compact('user', 'applications'));
     }
 
     public function perfil(Request $request)
@@ -25,6 +38,11 @@ class DashboardController extends Controller
 
         $token = $tokenResult ? $tokenResult->id : null;
 
+        // Pega o grupo e nome da cidade do user
+        $grupo = $user->getRoleNames()->first();
+        $cidade = $user->unidade->cidade;
+
+
         // IMPORTANTE: se você quiser o plainTextToken, precisa salvar no login em session
         // no login, depois de criar o token:
         // session(['user_token' => $tokenResult->accessToken]);
@@ -32,6 +50,6 @@ class DashboardController extends Controller
         // Aqui você pega da session
         $token = session('user_token');
 
-        return view('perfil', compact('user', 'token'));
+        return view('perfil', compact('user', 'token', 'grupo', 'cidade'));
     }
 }

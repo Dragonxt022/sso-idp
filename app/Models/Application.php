@@ -8,17 +8,21 @@ use Spatie\Permission\Models\Role;
 
 class Application extends Model
 {
-    protected $fillable = ['name', 'description', 'icon', 'link_redirect'];
-
-    // public function roles()
-    // {
-    //     return $this->belongsToMany(Role::class, 'application_role'); // tabela pivot
-    // }
+    protected $fillable = [
+        'name',
+        'description',
+        'icon',
+        'link_redirect',
+        'order',
+        'active'
+    ];
 
     public function roles()
     {
         return $this->belongsToMany(\Spatie\Permission\Models\Role::class);
     }
+
+
 
 
 

@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+
 
 class UserController extends Controller
 {
@@ -25,21 +27,23 @@ class UserController extends Controller
             ? asset('frontend/profiles/' . $user->profile_photo_path)
             : null;
 
+        $primeiroRole = $user->roles->first();
+
         return response()->json([
             'id'          => $user->id,
             'name'        => $user->name,
             'email'       => $user->email,
             'foto'        => $foto,
-            'unidade_id'  => $user->unidade_id ?? null,
             'cpf'         => $user->cpf ?? null,
-            // pega o primeiro role (se existir) e expõe só o id como grupo_id
             'grupo_id'    => $user->roles->first()->id ?? null,
+            'grupo_nome'  => $primeiroRole->name ?? null,
             'permissions' => $user->getAllPermissions()->map(function ($permission) {
                 return [
                     'id' => $permission->id,
                     'name' => $permission->name,
                 ];
             }),
+            'unidade'     => $user->unidade ? $user->unidade : null,
         ]);
     }
 
@@ -55,21 +59,29 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Atribui um ou vários roles ao usuário
-     */
+
     public function assignRole(Request $request, $id)
     {
+        // Verifica se o usuário logado tem o role Franqueadora
+        if (!Auth::user()->hasRole('Franqueadora')) {
+            return response()->json([
+                'message' => 'Você não tem autorização para atribuir grupos.'
+            ], 403);
+        }
+
+        // Validação dos roles recebidos
         $request->validate([
             'roles' => 'required|array|min:1',
             'roles.*' => 'exists:roles,name',
         ]);
 
         $user = User::findOrFail($id);
-        $user->syncRoles($request->roles); // Remove antigos e adiciona os novos
+
+        // Sincroniza os roles
+        $user->syncRoles($request->roles);
 
         return response()->json([
-            'message' => 'Roles atribuídos com sucesso!',
+            'message' => 'Grupos atribuídos com sucesso!',
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -77,6 +89,7 @@ class UserController extends Controller
             ]
         ]);
     }
+
 
     /**
      * Atribui uma ou várias permissões ao usuário
