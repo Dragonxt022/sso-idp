@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
-use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use App\Models\User;
+use App\Events\UserActionEvent;
 
 class AuthController extends Controller
 {
@@ -15,7 +17,6 @@ class AuthController extends Controller
      */
     public function showLoginForm(Request $request)
     {
-        // Se o usuário já estiver logado
         if (Auth::check()) {
             $redirect = $request->query('redirect_uri');
             if ($redirect && filter_var($redirect, FILTER_VALIDATE_URL)) {
@@ -25,12 +26,9 @@ class AuthController extends Controller
             return redirect('/dashboard');
         }
 
-        // Pega redirect_uri da query string, se houver
         $redirect = $request->query('redirect_uri', null);
-
         return view('auth.login', compact('redirect'));
     }
-
 
     /**
      * Login local + SSO
@@ -39,7 +37,6 @@ class AuthController extends Controller
     {
         $credentials = $request->only('email', 'password');
         $remember = $request->has('remember');
-
         $redirect = $request->input('redirect_uri', '/dashboard');
 
         if (!Auth::attempt($credentials)) {
@@ -48,18 +45,37 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
+        // ✅ Verifica se o usuário pode acessar
+        if (!in_array($user->status, ['ativo', 'ferias'])) {
+            $statusMap = [
+                'ferias' => 'de férias',
+                'demitido' => 'demitido',
+            ];
+            $statusMsg = $statusMap[$user->status] ?? $user->status;
+
+            Auth::logout();
+            return back()->with('error', "Este usuário está $statusMsg.");
+        }
+
+        // Dispara log de auditoria
+        event(new UserActionEvent(
+            $user,
+            'login',
+            'Usuário realizou login',
+            $request->ip(),
+            $request->userAgent()
+        ));
+
         // Cria token via Passport
         $tokenResult = $user->createToken('SSO Client');
         $token = $tokenResult->accessToken;
 
         session(['user_token' => $token]);
 
-        // Redireciona para cliente externo se redirect_uri for válido
         if ($redirect && filter_var($redirect, FILTER_VALIDATE_URL)) {
             return redirect($redirect . '?token=' . $token);
         }
 
-        // Senão, leva para dashboard
         return redirect('/dashboard');
     }
 
@@ -71,17 +87,24 @@ class AuthController extends Controller
         $user = Auth::user();
 
         if ($user) {
-            // Revoga todos os tokens do usuário
-            $user->tokens()->delete(); // Passport: acessToken ou token pessoal
+            // Dispara log de auditoria
+            event(new UserActionEvent(
+                $user,
+                'logout',
+                'Usuário realizou logout',
+                $request->ip(),
+                $request->userAgent()
+            ));
+
+            $user->tokens()->delete();
+            Auth::logout();
         }
 
-        Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return redirect('/');
     }
-
 
     /**
      * Callback do IdP (SSO)
@@ -97,7 +120,6 @@ class AuthController extends Controller
             return 'Token não recebido!';
         }
 
-        // Consulta o IdP
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $token
         ])->get('https://login.taiksu.com.br/api/user');
@@ -108,7 +130,6 @@ class AuthController extends Controller
 
         $userData = $response->json();
 
-        // Cria ou atualiza usuário local
         $user = User::updateOrCreate(
             ['email' => $userData['email']],
             [
@@ -118,15 +139,31 @@ class AuthController extends Controller
             ]
         );
 
+        if (!in_array($user->status, ['ativo', 'ferias'])) {
+            $statusMap = [
+                'ferias' => 'de férias',
+                'demitido' => 'demitido',
+            ];
+            $statusMsg = $statusMap[$user->status] ?? $user->status;
+            return redirect('/login')->with('error', "Este usuário está $statusMsg.");
+        }
+
         Auth::login($user);
 
-        // Se houver redirect_uri, envia token para o cliente
+        // Dispara log de auditoria
+        event(new UserActionEvent(
+            $user,
+            'sso_login',
+            'Usuário realizou login via SSO',
+            $request->ip(),
+            $request->userAgent()
+        ));
+
         if ($redirect && filter_var($redirect, FILTER_VALIDATE_URL)) {
             $tokenLocal = $user->createToken('SSO Client')->accessToken;
             return redirect($redirect . '?token=' . $tokenLocal);
         }
 
-        // Senão, leva para dashboard
         return redirect('/dashboard');
     }
 
@@ -143,6 +180,66 @@ class AuthController extends Controller
         $user->password = Hash::make($request->input('nova-senha'));
         $user->save();
 
+        // Dispara log de auditoria
+        event(new UserActionEvent(
+            $user,
+            'change_password',
+            'Usuário alterou sua senha',
+            $request->ip(),
+            $request->userAgent()
+        ));
+
         return back()->with('success', 'Senha alterada com sucesso!');
+    }
+
+    /**
+     * Enviar link de recuperação de senha
+     */
+    public function sendResetLink(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ]);
+
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('success', 'Link de recuperação enviado para seu e-mail!')
+            : back()->withErrors(['email' => __($status)]);
+    }
+
+    /**
+     * Resetar senha do usuário
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->password = Hash::make($password);
+                $user->save();
+
+                // Dispara log de auditoria
+                event(new UserActionEvent(
+                    $user,
+                    'reset_password',
+                    'Usuário resetou a senha via link',
+                    request()->ip(),
+                    request()->userAgent()
+                ));
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? redirect()->route('login')->with('success', 'Senha redefinida com sucesso!')
+            : back()->withErrors(['email' => [__($status)]]);
     }
 }

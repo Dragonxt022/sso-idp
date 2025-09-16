@@ -24,7 +24,7 @@ class ImageService
         ?UploadedFile $file,
         ?string $oldPath = null,
         string $folder = 'uploads',
-        array $allowedMimes = ['png', 'jpg', 'jpeg', 'svg'],
+        array $allowedMimes = ['png', 'jpg', 'jpeg', 'svg', 'gif', 'webp', 'tiff'],
         int $maxSizeEmKb = 2048
     ): ?string {
         if (!$file) {

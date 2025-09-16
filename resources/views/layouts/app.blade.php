@@ -10,9 +10,11 @@
     <link rel="shortcut icon" href="https://login.taiksu.com.br/frontend/img/favicone.png" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <!-- Scripts -->
     <script src="{{ asset('frontend/js/index.js?v1') }}" defer></script>
     <link href="{{ asset('frontend/css/global.css') }}" rel="stylesheet">
+
 </head>
 
 <body class="max-w-4xl min-h-screen mx-auto mt-28 px-8 overflow-auto">
@@ -34,21 +36,22 @@
 
 
     {{-- Conteúdo principal --}}
-    <main class="p-2 mx-auto">
+    <main class="p-2 mb-6 mx-auto">
         @yield('content')
     </main>
 
     {{-- Footer simples --}}
-<footer class="hidden md:flex flex-row items-center justify-between fixed bottom-0 left-0 w-full bg-green-100 text-gray-600 text-center text-md py-2 px-8 font-semibold">
+    <footer
+        class="hidden md:flex flex-row items-center justify-between fixed bottom-0 left-0 w-full bg-green-100 text-gray-600 text-center text-md py-2-12 px-8 font-semibold">
 
-  <div> </div>
+        <div> </div>
 
-  <div>
-    Taiksu <span class="font-normal text-green-600">Office</span>
-  </div>
+        <div>
+            Taiksu <span class="font-normal text-green-600">Office</span>
+        </div>
 
-  <div></div>
-</footer>
+        <div></div>
+    </footer>
 
 
 </body>

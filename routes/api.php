@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\EmpresaFornecedoraController;
+use App\Http\Controllers\Api\FornecedorController;
+use App\Http\Controllers\Api\FranqueadoController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\InforUnidadeController;
 use Illuminate\Support\Facades\Route;
@@ -18,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Grupo de rotas que exigem autenticação via token da API.
-Route::middleware('auth:api')->group(function () {
+Route::middleware(['auth:api', 'checkUserStatus'])->group(function () {
 
     /**
      * =======================================================================
@@ -40,6 +43,26 @@ Route::middleware('auth:api')->group(function () {
     // Atribui uma ou mais permissões diretas a um usuário específico.
     Route::post('/users/{id}/assign-permission', [UserController::class, 'assignPermission'])->name('api.users.assign_permission');
 
+
+    /**
+     * =====================================
+     * Api de cadastros de fornecedores
+     * =====================================
+     */
+
+    // Rotas de API Resource para o modelo User (index, store, show, update, destroy).
+    Route::apiResource('fornecedores', FornecedorController::class);
+
+
+    /**
+     * =======================
+     *  Rotas de criação de Empresa Fornecedores
+     * =======================
+     */
+    // Rotas de API Resource para o modelo EmpresaFornecedora (index, store, show, update, destroy).
+    Route::apiResource('empresas-fornecedoras', EmpresaFornecedoraController::class);
+
+
     /**
      * =======================================================================
      * ROTAS DE INFORMAÇÕES DA UNIDADE (CRUD)
@@ -48,4 +71,23 @@ Route::middleware('auth:api')->group(function () {
 
     // Rotas de API Resource para o modelo InforUnidade (index, store, show, update, destroy).
     Route::apiResource('infor-unidades', InforUnidadeController::class);
+
+
+    /**
+     * =======================================================================
+     * ROTAS DE CONTROLLER BACKOFFICE - FRANQUEADOS
+     * =======================================================================
+     *
+     */
+
+    // Visualiza lista de franqueados
+    Route::get('/franqueados', [FranqueadoController::class, 'index'])->name('api.franqueados.index');
+
+    // Cadastro de franqueado
+    Route::post('/franqueados', [FranqueadoController::class, 'store'])->name('api.franqueados.store');
+
+    // Busque de um franqueado especifico
+    Route::get('/franqueados/{id}', [FranqueadoController::class, 'show'])->name('api.franqueados.show');
+
+
 });

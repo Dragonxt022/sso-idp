@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-
+use Spatie\Permission\PermissionRegistrar;
 
 class UserController extends Controller
 {
@@ -62,6 +62,8 @@ class UserController extends Controller
 
     public function assignRole(Request $request, $id)
     {
+        auth()->shouldUse('web'); // garante guard web para esta request
+
         // Verifica se o usuário logado tem o role Franqueadora
         if (!Auth::user()->hasRole('Franqueadora')) {
             return response()->json([
@@ -77,15 +79,20 @@ class UserController extends Controller
 
         $user = User::findOrFail($id);
 
-        // Sincroniza os roles
-        $user->syncRoles($request->roles);
+        // 🔹 Carrega apenas os roles do guard web
+        $roles = Role::whereIn('name', $request->roles)
+            ->where('guard_name', 'web')
+            ->get();
+
+        // Sincroniza com o guard correto
+        $user->syncRoles($roles);
 
         return response()->json([
             'message' => 'Grupos atribuídos com sucesso!',
             'user' => [
-                'id' => $user->id,
+                'id'   => $user->id,
                 'name' => $user->name,
-                'roles' => $user->getRoleNames(),
+                'roles'=> $user->getRoleNames(),
             ]
         ]);
     }
@@ -96,19 +103,28 @@ class UserController extends Controller
      */
     public function assignPermission(Request $request, $id)
     {
+        auth()->shouldUse('web'); // autentica com guard web
+
         $request->validate([
-            'permissions' => 'required|array|min:1',
+            'permissions'   => 'required|array|min:1',
             'permissions.*' => 'exists:permissions,name',
         ]);
 
         $user = User::findOrFail($id);
-        $user->syncPermissions($request->permissions); // Remove antigas e adiciona as novas
+
+        // carrega as permissões pelo guard correto
+        $permissions = \Spatie\Permission\Models\Permission::whereIn('name', $request->permissions)
+            ->where('guard_name', 'web')
+            ->get();
+
+        // sincroniza no guard web
+        $user->syncPermissions($permissions);
 
         return response()->json([
             'message' => 'Permissões atribuídas com sucesso!',
             'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
+                'id'          => $user->id,
+                'name'        => $user->name,
                 'permissions' => $user->getAllPermissions()->pluck('name'),
             ]
         ]);

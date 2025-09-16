@@ -14,6 +14,7 @@ class InforUnidade extends Model
 
     protected $fillable = [
         'cep',
+        'estado',
         'cidade',
         'bairro',
         'rua',

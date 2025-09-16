@@ -35,7 +35,7 @@
                 @else
                     @foreach ($users as $user)
                         <div id="user-{{ $user->id }}"
-                            class="bg-white border border-gray-200 rounded-xl p-6 hover:border-gray-100 hover:shadow-xl transition duration-300 flex flex-row items-center justify-between cursor-pointer group">
+                            class="bg-white border border-gray-200 rounded-xl py-6 px-8 hover:border-gray-100 hover:shadow-xl transition duration-300 flex flex-row items-center justify-between cursor-pointer group">
 
                             <div class="flex flex-row items-center gap-4">
                                 <div class="w-12 h-12 flex items-center justify-center">

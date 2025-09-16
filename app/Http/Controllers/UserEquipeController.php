@@ -7,6 +7,8 @@ use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class UserEquipeController extends Controller
 {
@@ -14,19 +16,14 @@ class UserEquipeController extends Controller
     {
         $authUser = Auth::user();
 
-        if ($authUser->hasRole('Franqueadora')) {
-            // Franqueadora só vê usuários que são Franqueados
-            $users = User::role('Franqueado') // método do spatie
-                ->with('unidade')
-                ->get();
-        } elseif ($authUser->hasRole('Franqueado')) {
-            // Franqueado só vê colaboradores da sua unidade
-            $users = User::role('Colaborador')
+        if ($authUser->hasRole('Franqueadora', 'api')) {
+            $users = User::role('Franqueado', 'api')->with('unidade')->get();
+        } elseif ($authUser->hasAnyRole(['Franqueado', 'Gerente'], 'api')) {
+            $users = User::role(['Colaborador', 'Gerente', 'Recepcionista'], 'api')
                 ->with('unidade')
                 ->where('unidade_id', $authUser->unidade_id)
                 ->get();
         } else {
-            // Nenhum acesso
             $users = collect();
         }
 
@@ -35,10 +32,23 @@ class UserEquipeController extends Controller
 
     public function create()
     {
-        $permissions = Permission::where('name', '!=', 'Beckoffice')->get();
-        return view('equipe.create', compact('permissions'));
-    }
+        $excludedRoles = [
+            'Franqueadora',
+            'Desenvolvedor',
+            'Fornecedor',
+            'Franqueado',
+        ];
 
+        $roles = Role::where('guard_name', 'api')
+            ->whereNotIn('name', $excludedRoles)
+            ->get();
+
+        $permissions = Permission::where('guard_name', 'api')
+            ->where('name', '!=', 'Beckoffice')
+            ->get();
+
+        return view('equipe.create', compact('permissions', 'roles'));
+    }
 
     public function store(Request $request)
     {
@@ -47,78 +57,62 @@ class UserEquipeController extends Controller
             'email' => 'required|email|unique:users,email',
             'cpf' => 'required|string|max:14|unique:users,cpf',
             'profile_photo_path' => 'nullable|image|mimes:png,jpg,jpeg|max:2048',
+            'role_id' => 'required|exists:roles,id',
             'permission_ids' => 'nullable|array',
             'permission_ids.*' => 'exists:permissions,id',
             'password' => 'required|string|min:8|confirmed',
-        ], [
-            'name.required' => 'O campo Nome Completo é obrigatório.',
-            'name.max' => 'O Nome Completo não pode ter mais de 255 caracteres.',
-
-            'email.required' => 'O campo E-mail é obrigatório.',
-            'email.email' => 'Digite um e-mail válido.',
-            'email.unique' => 'Este e-mail já está cadastrado no sistema.',
-
-            'cpf.required' => 'O campo CPF é obrigatório.',
-            'cpf.unique' => 'Este CPF já está cadastrado.',
-            'cpf.max' => 'O CPF não pode ultrapassar 14 caracteres.',
-
-            'password.required' => 'A senha é obrigatória.',
-            'password.min' => 'A senha deve ter entre 8 e 12 caracteres, incluindo maiúsculas, minúsculas, números e caracteres especiais',
-            'password.confirmed' => 'A confirmação da senha não confere.',
-
-            'permission_ids.*.exists' => 'Uma ou mais permissões selecionadas não são válidas.',
         ]);
 
-
-        // 🔹 Limpa pontos, traços e vírgulas do CPF
         $validated['cpf'] = preg_replace('/[\.\-\,]/', '', $validated['cpf']);
-
-        // Upload da foto
         $photoPath = ImageService::handleUpload($request->file('profile_photo_path'), null, 'frontend/profiles');
-
-        // Extrai só o nome do arquivo
         $photoName = $photoPath ? basename($photoPath) : null;
-        // Cria o usuário
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'cpf' => $validated['cpf'],
             'unidade_id' => auth()->user()->unidade_id,
-            'profile_photo_path' => $photoName, // salva somente o nome
-            'password' => bcrypt($validated['password']), // senha digitada pelo usuário
-            'pin' => $this->generateUniquePin(), // gera um PIN aleatório
+            'profile_photo_path' => $photoName,
+            'password' => bcrypt($validated['password']),
+            'pin' => $this->generateUniquePin(),
         ]);
 
-        // Atribui role fixo Colaborador
-        $user->assignRole('Colaborador');
+        $role = Role::where('id', $validated['role_id'])
+            ->where('guard_name', 'api')
+            ->first();
 
-        // Atribui permissões extras, se tiver
+        if ($role) {
+            $user->syncRoles([$role]);
+        }
+
         if ($request->filled('permission_ids')) {
-            $permissions = Permission::whereIn('id', $validated['permission_ids'])->pluck('name')->toArray();
-            $user->syncPermissions($permissions);
+            $permissions = Permission::whereIn('id', $validated['permission_ids'])
+                ->pluck('name')
+                ->toArray();
+            $user->syncPermissions($permissions); // guard_name = api
         }
 
         return redirect()->route('equipe.index')->with('success', 'Colaborador criado com sucesso!');
     }
 
+
     protected function generateUniquePin($length = 4)
     {
         do {
-            // Gera um PIN numérico aleatório
             $pin = mt_rand(1000, 9999);
-        } while (\App\Models\User::where('pin', $pin)->exists()); // Verifica duplicado
+        } while (User::where('pin', $pin)->exists());
 
         return $pin;
     }
-
 
     public function show(User $user)
     {
         $authUser = Auth::user();
 
-        if ($authUser->hasRole('Franqueadora')) {
-            return response()->json($user->load('unidade'));
-        } elseif ($authUser->hasRole('Franqueado') && $authUser->unidade_id == $user->unidade_id) {
+        if (
+            $authUser->hasRole('Franqueadora', 'api') ||
+            ($authUser->hasRole('Franqueado', 'api') && $authUser->unidade_id == $user->unidade_id)
+        ) {
             return response()->json($user->load('unidade'));
         }
 
@@ -129,10 +123,9 @@ class UserEquipeController extends Controller
     {
         $authUser = Auth::user();
 
-        // Regra de edição
         if (
-            $authUser->hasRole('Franqueadora') ||
-            ($authUser->hasRole('Franqueado') && $authUser->unidade_id == $user->unidade_id)
+            $authUser->hasRole('Franqueadora', 'api') ||
+            ($authUser->hasRole('Franqueado', 'api') && $authUser->unidade_id == $user->unidade_id)
         ) {
 
             $data = $request->only(['name', 'email', 'cpf', 'unidade_id']);
@@ -152,8 +145,8 @@ class UserEquipeController extends Controller
         $authUser = Auth::user();
 
         if (
-            $authUser->hasRole('Franqueadora') ||
-            ($authUser->hasRole('Franqueado') && $authUser->unidade_id == $user->unidade_id)
+            $authUser->hasRole('Franqueadora', 'api') ||
+            ($authUser->hasRole('Franqueado', 'api') && $authUser->unidade_id == $user->unidade_id)
         ) {
 
             $user->delete();
@@ -163,65 +156,75 @@ class UserEquipeController extends Controller
         return response()->json(['error' => 'Acesso negado'], 403);
     }
 
-    public function equipe(Request $request)
-    {
-        $user = $request->user();
-
-        // Recupera todas as permissões do usuário
-        $permissions = Permission::where('name', '!=', 'Beckoffice')->get();
-
-
-        return view('equipe.index', compact('user', 'permissions'));
-    }
-
     public function colaborador(Request $request, $id)
     {
-        $user = User::where('id', $id)->firstOrFail();
+        $user = User::findOrFail($id);
         $foto = $user->profile_photo_path
             ? asset('frontend/profiles/' . $user->profile_photo_path)
             : asset('frontend/img/user.png');
 
-        // Pegando todas as permissões
-        $permissions = Permission::where('name', '!=', 'Beckoffice')->get();
+        $excludedRoles = ['Franqueadora', 'Desenvolvedor', 'Fornecedor', 'Franqueado'];
 
+        $roles = Role::where('guard_name', 'api')
+            ->whereNotIn('name', $excludedRoles)
+            ->get();
 
-        // Permissões do usuário
+        $permissions = Permission::where('guard_name', 'api')
+            ->where('name', '!=', 'Beckoffice')
+            ->get();
+
         $userPermissions = $user->getPermissionNames();
 
-        return view('equipe.colaborador', compact('user', 'foto', 'permissions', 'userPermissions'));
+        return view('equipe.colaborador', compact('user', 'foto', 'roles', 'permissions', 'userPermissions'));
     }
 
-    // Gerar novo PIN via AJAX
-    public function regeneratePin(Request $request, User $user)
+    public function updateRole(Request $request, $id)
     {
-        // Gera PIN único
-        do {
-            $pin = mt_rand(1000, 9999);
-        } while (\App\Models\User::where('pin', $pin)->exists());
+        $user = User::findOrFail($id);
 
-        $user->pin = $pin;
-        $user->save();
+        // Validação básica
+        $request->validate([
+            'role_id' => 'required|exists:roles,id'
+        ]);
 
-        return response()->json(['pin' => $pin]);
+        // 🔹 Busca a role garantindo que seja do guard api
+        $role = Role::where('id', $request->role_id)
+            ->where('guard_name', 'api')
+            ->first();
+
+        if (!$role) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Role não encontrada no guard API'
+            ], 404);
+        }
+
+        // 🔹 Aplica a role no guard api
+        $user->syncRoles(Role::where('name', $role->name)->where('guard_name', 'api')->first());
+
+
+        return response()->json([
+            'status' => 'success',
+            'role' => $role->name,
+            'message' => 'Cargo atualizado com sucesso!'
+        ]);
     }
+
+
 
     public function togglePermission(Request $request, User $user)
     {
-        $permissionName = $request->input('permission');
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Limpa cache do Spatie para evitar inconsistências
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-
-        // Busca a permissão com guard 'web'
-        $permission = Permission::where('name', $permissionName)
-            ->where('guard_name', 'web')
+        $permission = Permission::where('name', $request->input('permission'))
+            ->where('guard_name', 'api')
             ->first();
 
         if (!$permission) {
-            return response()->json(['error' => "Permissão não encontrada"], 404);
+            return response()->json(['error' => 'Permissão não encontrada'], 404);
         }
 
-        if ($user->hasPermissionTo($permission)) {
+        if ($user->hasPermissionTo($permission, 'api')) {
             $user->revokePermissionTo($permission);
             $status = false;
         } else {
@@ -230,5 +233,16 @@ class UserEquipeController extends Controller
         }
 
         return response()->json(['status' => $status]);
+    }
+
+    public function toggleStatus(User $user)
+    {
+        $user->status = $user->status === 'demitido' ? 'ativo' : 'demitido';
+        $user->save();
+
+        return response()->json([
+            'status' => $user->status,
+            'message' => $user->status === 'ativo' ? 'Usuário reativado!' : 'Usuário demitido!'
+        ]);
     }
 }

@@ -29,14 +29,6 @@
                 <img src="{{ asset('frontend/img/edit.png') }}" class="w-8 h-8">
             </div>
 
-            <div class="flex flex-row items-center justify-between bg-white rounded-xl py-6 px-8 border border-gray-200">
-                <div class="flex flex-row items-center gap-2">
-                    <img src="{{ asset('frontend/img/group.png') }}" class=" h-6">
-                    <h3 class="text-md font-medium font-semibold text-gray-600">Grupo</h3>
-                </div>
-                <span class="text-gray-600 text-sm">{{ $grupo }}</span>
-            </div>
-
             <div
                 class="flex flex-row items-center justify-between bg-white rounded-xl py-6 px-8 border border-gray-200 border-gray-200">
                 <div class="flex flex-row items-center gap-2">
@@ -51,7 +43,7 @@
                     <img src="{{ asset('frontend/img/cargo.png') }}" class="w-6 h-6">
                     <h3 class="text-md font-medium font-semibold text-gray-600">Cargo</h3>
                 </div>
-                <img src="{{ asset('frontend/img/breve_tag.png') }}" class="h-6"> <!-- Aqui entra a variável do cargo -->
+                <span class="text-gray-600 text-sm">{{ $grupo }}</span>
             </div>
 
             <div class="flex flex-row items-center justify-between bg-white rounded-xl py-6 px-8 border border-gray-200">

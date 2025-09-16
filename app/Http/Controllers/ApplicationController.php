@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Application;
+use App\Models\User;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
@@ -150,6 +151,22 @@ class ApplicationController extends Controller
 
         // Remove as relações de roles
         $application->roles()->detach();
+
+        // Encontra a permissão vinculada à aplicação
+        $permission = Permission::where('name', $application->name)
+            ->where('guard_name', 'api')
+            ->first();
+
+        if ($permission) {
+            // Remove a permissão de todos os usuários
+            $users = User::permission($permission->name)->get();
+            foreach ($users as $user) {
+                $user->revokePermissionTo($permission);
+            }
+
+            // Remove a permissão
+            $permission->delete();
+        }
 
         // Remove a aplicação
         $application->delete();

@@ -23,6 +23,7 @@ class InforUnidadeController extends Controller
         $validated = $request->validate([
             'cep' => 'required|string|max:255',
             'cidade' => 'nullable|string|max:255',
+            'estado' => 'required|string|max:255',
             'bairro' => 'required|string|max:255',
             'rua' => 'required|string|max:255',
             'numero' => 'required|string|max:255',

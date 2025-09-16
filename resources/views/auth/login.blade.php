@@ -69,10 +69,18 @@
                         @enderror
                     </div>
 
+
                     <button type="submit"
-                        class="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 rounded-md transition">
+                        class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-md transition-all duration-300">
                         Entrar
                     </button>
+
+                    {{-- Link Esqueci minha senha --}}
+                    <div class="flex justify-center mb-4">
+                        <a href="{{ route('password.request') }}" class="text-sm text-gray-400 hover:text-gray-600">
+                            Esqueci minha senha
+                        </a>
+                    </div>
                 </form>
             </div>
         </div>

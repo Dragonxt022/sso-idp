@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -34,6 +36,7 @@ class User extends Authenticatable
         'updated_at',
         'deleted_at',
         'pin',
+        'status',
 
     ];
 
@@ -63,5 +66,17 @@ class User extends Authenticatable
     public function unidade()
     {
         return $this->belongsTo(InforUnidade::class, 'unidade_id');
+    }
+
+
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

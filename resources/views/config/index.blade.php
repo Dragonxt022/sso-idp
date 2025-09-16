@@ -31,14 +31,27 @@
                 </div>
             </a>
 
-            <!-- Gerenciar Aplicativos -->
-            <a href="{{ route('applications.index') }}">
+            <!-- Auditoria usuario -->
+            <a href="{{ route('auditoria.index') }}">
                 <div id="alterar-senha"
                     class="flex flex-row items-center justify-between bg-white rounded-xl py-8 px-8 border border-gray-200 text-gray-600 hover:text-green-700 transition-all duration-300 group cursor-pointer">
                     <div class="flex flex-row items-center gap-2">
                         <img src="{{ asset('frontend/img/apps/security.png') }}"
                             class="w-6 h-6 group-hover:scale-110 transition-all duration-300">
                         <h3 class="text-md font-semibold">Auditoria</h3>
+                    </div>
+                    <img class="h-6" src="{{ asset('frontend/img/seta.png') }}">
+                </div>
+            </a>
+
+            <!-- Auditoria Todos erros -->
+            <a href="{{ route('auditoria.erros') }}">
+                <div id="alterar-senha"
+                    class="flex flex-row items-center justify-between bg-white rounded-xl py-8 px-8 border border-gray-200 text-gray-600 hover:text-green-700 transition-all duration-300 group cursor-pointer">
+                    <div class="flex flex-row items-center gap-2">
+                        <img src="{{ asset('frontend/img/apps/security.png') }}"
+                            class="w-6 h-6 group-hover:scale-110 transition-all duration-300">
+                        <h3 class="text-md font-semibold">Controle de erros</h3>
                     </div>
                     <img class="h-6" src="{{ asset('frontend/img/seta.png') }}">
                 </div>

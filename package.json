@@ -17,6 +17,7 @@
         "vite": "^7.0.4"
     },
     "dependencies": {
-        "sortablejs": "^1.15.6"
+        "sortablejs": "^1.15.6",
+        "sweetalert2": "^11.23.0"
     }
 }
