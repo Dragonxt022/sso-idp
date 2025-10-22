@@ -45,8 +45,7 @@
                     </div>
             </div>
 
-            <div
-                class="flex flex-col gap-4 items-center justify-between bg-white rounded-xl py-4 px-8 border border-gray-200">
+            <div class="flex flex-col gap-8 items-left  bg-white rounded-xl py-6 px-8 border border-gray-200">
                 <div class="w-full flex flex-row items-center justify-between">
                     <div class="flex flex-row items-center gap-2">
                         <img src="{{ asset('frontend/img/cargo.png') }}" class="w-6 h-6">
@@ -59,15 +58,21 @@
                         @endforeach
                     </select>
                 </div>
+
                 <hr class="border-t border-gray-200 w-full">
+
                 <div class="w-full flex flex-row items-center justify-between">
                     <div class="flex flex-row items-center gap-2">
                         <img src="{{ asset('frontend/img/money.png') }}" class="w-6 h-6">
-                        <h3 class="text-md font-semibold text-gray-600">Salário</h3>
+                        <h3 class="text-md font-semibold text-gray-600">Salário Bruto</h3>
                     </div>
-                    <img src="{{ asset('frontend/img/breve_tag.png') }}" class="h-6">
+                    <input type="text" name="salario_base" class="bg-gray-50 border border-gray-200 rounded-md p-2 focus:ring-2 focus:bg-white focus:ring-green-500 focus:outline-none">
                 </div>
+
+                <p class="text-xs text-gray-400 text-left">Adicione o salário bruto recebido, aquele registrado em carteira sem contar os benefícios.</p>
             </div>
+
+
 
             <div class="flex flex-col bg-white rounded-xl border border-gray-200 p-8 gap-4">
                 <!-- Nome Completo -->
@@ -90,10 +95,16 @@
                     @enderror
                 </div>
 
+                <!-- Telefone -->
+                <div class="w-full">
+                    <label class="text-sm font-medium text-gray-500">Telefone</label>
+                    <input type="text" name="telefone" class="w-full bg-gray-50 border border-gray-200 rounded-md p-2 focus:ring-2 focus:bg-white focus:ring-green-500 focus:outline-none">
+                </div>
+
                 <!-- CPF -->
                 <div>
                     <label class="text-sm font-medium text-gray-500">CPF *</label>
-                    <input type="number" name="cpf" value="{{ old('cpf') }}"
+                    <input type="text" name="cpf" value="{{ old('cpf') }}"
                         class="w-full bg-gray-50 border border-gray-200 rounded-md p-2 focus:ring-2 focus:bg-white focus:ring-green-500 focus:outline-none">
                     @error('cpf')
                         <span class="text-red-600 text-sm">{{ $message }}</span>
@@ -117,41 +128,8 @@
                         <span class="text-red-600 text-sm">{{ $message }}</span>
                     @enderror
                 </div>
-
-
-
             </div>
 
-            <!-- Botão de Envio
-            <div class="flex flex-col gap-2 mt-2">
-                <div class="text-sm font-medium text-gray-500 px-2">Permissões</div>
-
-                <div id="permissoes"
-                    class="flex flex-col items-center justify-between bg-white rounded-xl py-4 px-8 border border-gray-200 text-gray-600">
-
-                    <div
-                        class="flex flex-col items-center gap-4 w-full pt-4">
-                        @foreach ($permissions as $permission)
-                            <div
-                                class="flex items-center justify-between w-full pb-5 {{ !$loop->last ? 'border-b border-gray-200' : '' }}">
-                                <span class="text-gray-700">{{ $permission->name }}</span>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" name="permission_ids[]" value="{{ $permission->id }}"
-                                        class="sr-only peer"
-                                        {{ in_array($permission->id, old('permission_ids', [])) ? 'checked' : '' }}>
-                                    <div
-                                        class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-green-500
-                                            after:content-[''] after:absolute after:top-0.5 after:left-0.5
-                                            after:bg-white after:border-gray-300 after:border after:rounded-full
-                                            after:h-5 after:w-5 after:transition-all transition-all duration-900 peer-checked:after:translate-x-full">
-                                    </div>
-                                </label>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-            -->
             <!-- Botão de Envio -->
             <div>
                 <button type="submit"

@@ -37,8 +37,8 @@ class EmpresaFornecedoraController extends Controller
             'cidade' => 'nullable|string|max:255',
             'estado' => 'nullable|string|max:2',
             'cep' => 'nullable|string|max:9',
-            'user_id' => 'nullable|exists:users,id',
             'logo' => 'nullable',
+            'link_cardapio' => 'nullable|longtext',
         ]);
 
         // normalizar CNPJ
@@ -70,8 +70,8 @@ class EmpresaFornecedoraController extends Controller
             'cidade' => 'nullable|string|max:255',
             'estado' => 'nullable|string|max:2',
             'cep' => 'nullable|string|max:9',
-            'user_id' => 'nullable|exists:users,id',
             'logo' => 'nullable',
+            'link_cardapio' => 'nullable|longtext',
         ]);
 
         // normalizar CNPJ

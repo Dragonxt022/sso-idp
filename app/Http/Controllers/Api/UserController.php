@@ -59,7 +59,9 @@ class UserController extends Controller
         ]);
     }
 
-
+    /**
+     * Atribui uma ou várias roles ao usuário
+     */
     public function assignRole(Request $request, $id)
     {
         auth()->shouldUse('web'); // garante guard web para esta request
@@ -129,4 +131,79 @@ class UserController extends Controller
             ]
         ]);
     }
+
+    // Retorna colaboradores por unidade
+    public function getByUnidade(Request $request, $unidade_id)
+    {
+        if (!is_numeric($unidade_id)) {
+            return response()->json(['error' => 'ID da unidade inválido'], 400);
+        }
+
+        $colaboradorId = $request->query('id');
+
+        $query = User::where('unidade_id', $unidade_id);
+
+        if ($colaboradorId) {
+            $query->where('id', $colaboradorId);
+        }
+
+        $colaboradores = $query->get()->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'pin' => $user->pin,
+                'status' => $user->status,
+                'unidade_id' => $user->unidade_id,
+                'grupo_id' => $user->roles->first()->id ?? null,
+                'cpf' => $user->cpf,
+                'profile_photo_path' => $user->profile_photo_path,
+                'empresa_fornecedora_id' => $user->empresa_fornecedora_id,
+                'criado_em' => $user->created_at
+                    ? $user->created_at->format('d/m/Y H:i')
+                    : null,
+            ];
+        });
+
+        if ($colaboradores->isEmpty()) {
+            return response()->json(['message' => 'Nenhum colaborador encontrado.'], 200);
+        }
+
+        return response()->json([
+            'total_usuarios_unidade_' . $unidade_id => $colaboradores->count(),
+            'data' => $colaboradores
+        ], 200);
+    }
+
+    // Buscar informações de um usuario por ID
+    public function getUserById($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuário não encontrado.'], 404);
+        }
+
+        $data = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'pin' => $user->pin,
+            'status' => $user->status,
+            'unidade_id' => $user->unidade_id,
+            'grupo_id' => $user->roles->first()->id ?? null,
+            'cpf' => $user->cpf,
+            'profile_photo_path' => $user->profile_photo_path,
+            'empresa_fornecedora_id' => $user->empresa_fornecedora_id,
+            'criado_em' => $user->created_at
+                ? $user->created_at->format('d/m/Y H:i')
+                : null,
+        ];
+
+        return response()->json($data, 200);
+    }
+
+
+
+
 }

@@ -20,6 +20,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Rotas livres
+Route::apiResource('infor-unidades', InforUnidadeController::class);
+
 // Grupo de rotas que exigem autenticação via token da API.
 Route::middleware(['auth:api', 'checkUserStatus'])->group(function () {
 
@@ -33,6 +36,9 @@ Route::middleware(['auth:api', 'checkUserStatus'])->group(function () {
 
     // Retorna os dados do usuário atualmente autenticado.
     Route::get('/user/me', [UserController::class, 'me'])->name('api.user.me');
+
+    // Buscar informações de um usuario por ID
+    Route::get('/users/{id}', [UserController::class, 'getUserById'])->name('api.users.show');
 
     // Lista todos os papéis (roles) e permissões disponíveis no sistema.
     Route::get('/roles-permissions', [UserController::class, 'listRolesPermissions'])->name('api.roles_permissions.list');
@@ -70,7 +76,7 @@ Route::middleware(['auth:api', 'checkUserStatus'])->group(function () {
      */
 
     // Rotas de API Resource para o modelo InforUnidade (index, store, show, update, destroy).
-    Route::apiResource('infor-unidades', InforUnidadeController::class);
+    // Route::apiResource('infor-unidades', InforUnidadeController::class);
 
 
     /**
@@ -88,6 +94,16 @@ Route::middleware(['auth:api', 'checkUserStatus'])->group(function () {
 
     // Busque de um franqueado especifico
     Route::get('/franqueados/{id}', [FranqueadoController::class, 'show'])->name('api.franqueados.show');
+
+    /**
+     *  =======================================================================
+     *  Rota de listagem dos colaboradores
+     * =======================================================================
+     */
+
+    // Listagem de colaboradores por unidade
+    Route::get('/colaboradores/{unidade_id}', [UserController::class, 'getByUnidade']);
+
 
 
 });

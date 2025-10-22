@@ -27,8 +27,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'telefone',
         'cpf',
         'unidade_id',
+        'empresa_fornecedora_id',
         'profile_photo_path',
         'email_verified_at',
         'remember_token',
@@ -78,5 +80,10 @@ class User extends Authenticatable
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function empresaFornecedora()
+    {
+        return $this->belongsTo(EmpresaFornecedora::class, 'empresa_fornecedora_id');
     }
 }

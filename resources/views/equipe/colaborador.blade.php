@@ -49,7 +49,7 @@
                 <div class="flex flex-row items-center gap-6">
                     <img src="{{ $user->profile_photo_path ? asset('frontend/profiles/' . $user->profile_photo_path) : asset('frontend/img/user.png') }}"
                         onerror="this.onerror=null;this.src='{{ asset('frontend/img/user.png') }}';"
-                        class="w-12 h-12 rounded-full group-hover:scale-105 group-hover:shadow-md transition-all duration-700" />
+                        class="w-16 h-16 rounded-full group-hover:scale-105 group-hover:shadow-md transition-all duration-700" />
                     <div>
                         <h2 class="text-2xl font-semibold text-green-800">{{ $user->name }}</h2>
                         <p class="text-gray-600 text-sm">{{ $user->email }}</p>
@@ -57,7 +57,7 @@
                 </div>
 
                 <!-- Botão Editar Perfil -->
-                <button id="editar-perfil">
+                <button id="editar-perfil" onclick="window.location='{{ route('equipe.edit', $user->id) }}'">
                     <img src="{{ asset('frontend/img/edit.png') }}" class="w-8 h-8 cursor-pointer">
                 </button>
             </div>
@@ -86,7 +86,7 @@
                         <img src="{{ asset('frontend/img/money.png') }}" class="w-6 h-6">
                         <h3 class="text-md font-semibold text-gray-600">Salário</h3>
                     </div>
-                    <img src="{{ asset('frontend/img/breve_tag.png') }}" class="h-6">
+                    <h4 id="salario" class="text-md font-semibold text-green-700">----</h4>
                 </div>
             </div>
 
@@ -220,10 +220,29 @@
         </div>
     </div>
 
-    {{-- Script do PIN --}}
+    {{-- Script do Salário e PIN --}}
     <script>
         let userId = {{ $user->id }};
 
+        fetch(`https://rh.taiksu.com.br/salario/${userId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${@json($user_token)}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.salario_bruto) {
+                    const salarioElem = document.getElementById('salario');
+                    salarioElem.textContent = new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                    }).format(data.salario_bruto);
+                }
+            });
+
+        // Modal PIN
         function abrirModalPin(id, pin) {
             userId = id;
             document.getElementById('pin-valor').textContent = pin;
@@ -461,4 +480,6 @@
                 .catch(() => toastError('Erro na requisição.'));
         }
     </script>
+
+
 @endsection

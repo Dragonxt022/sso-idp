@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <section class="max-w-2xl mx-auto">
+    <section class="max-w-4xl mx-auto">
 
         <div id="cards" class="flex flex-col gap-4 opacity-0 translate-y-4 transition-all duration-700">
 
@@ -13,32 +13,40 @@
                         <a href="/config">Configurações</a>
                     </div>
                     <img class="h-6" src="{{ asset('frontend/img/seta.png') }}">
-                    <p class="capitalize text-gray-500 text-lg font-semibold">Auditoria de Usuário</p>
+                    <p class="capitalize text-gray-500 text-lg font-semibold">Auditoria</p>
                 </div>
-                <img id="sso-icon" class="h-6 opacity-0 hover:opacity-100 transition-all duration-600 cursor-pointer"
-                    src="{{ asset('frontend/img/key.png') }}">
             </div>
 
             {{-- Cards resumo --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                @foreach ($stats as $action => $total)
-                    <div class="bg-white rounded-lg shadow p-3 flex flex-col">
-                        <span class="text-gray-500 capitalize text-sm">{{ str_replace('_', ' ', $action) }}</span>
-                        <span class="text-2xl font-bold">{{ $total }}</span>
-                    </div>
-                @endforeach
-            </div>
-
-            {{-- Card comparação mês --}}
-            <div class="bg-white rounded-lg shadow p-3 mt-2 flex flex-col items-center">
-                <span class="text-gray-500 text-sm">Acessos este mês</span>
-                <span class="text-2xl font-bold">{{ $compare['this'] }}</span>
-                <p class="text-xs text-gray-600">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-2">
+                <div class="bg-white rounded-xl px-6 py-8 border border-gray-200 group" id="card-acessos">
+                    <p class="text-gray-500" id="titulo-faturamento-royalties">Acessos este mês</p>
+                    <div class="flex flex-col gap-2">
+                    <h2 class="text-4xl font-bold text-green-900 group-hover:text-green-700 transition" id="valor-faturamento-royalties">
+                        {{ $compare['this'] }} Acessos
+                    </h2>
+                                    <p class="text-xs text-gray-600">
                     Mês passado: {{ $compare['last'] }}
                     (<span class="{{ $compare['percent'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
                         {{ $compare['percent'] }}%
                     </span>)
                 </p>
+                    </div>
+                </div>
+
+                    <!-- Aqui ele lista quantas ações sensíveis pendentes de aprovação existem, criar unidade, desativar unidade. -->
+                    <a href="#" class="bg-white rounded-xl px-6 py-8 border border-gray-200 group hover:shadow-xl transition duration-300" id="card-faturamento-royalties" data-id="faturamento-royalties">
+                        <p class="text-gray-500" id="titulo-faturamento-royalties">Ações Pendentes</p>
+                        <div class="flex flex-col gap-2">
+                        <h2 class="text-4xl font-bold text-green-900 group-hover:text-green-700 transition" id="valor-faturamento-royalties">
+                            03 Ações
+                        </h2>
+                        <h3 class="text-sm font-medium text-gray-500 flex items-center gap-2" id="descricao-faturamento">
+                                Aprovar ou revogar
+                                <img src="https://franqueadora.taiksu.com.br/assets/seta.png" class="h-4">
+                            </h3>
+                        </div>
+                    </a>
             </div>
 
             <canvas id="accessChart" class="mt-2 bg-white rounded-lg shadow p-3"></canvas>
@@ -85,17 +93,7 @@
 
             <!-- Cards de logs -->
             <div class="overflow-x-auto">
-                <table class="min-w-full bg-white rounded-lg shadow text-sm" id="logs-table">
-                    <thead class="bg-green-100 text-gray-600 uppercase text-xs">
-                        <tr>
-                            <th class="px-4 py-2 text-left">Usuário</th>
-                            <th class="px-4 py-2 text-left">Cidade</th>
-                            <th class="px-4 py-2 text-left">Ação</th>
-                            <th class="px-4 py-2 text-left">Descrição</th>
-                            <th class="px-4 py-2 text-left">IP</th>
-                            <th class="px-4 py-2 text-center">Data/Hora</th>
-                        </tr>
-                    </thead>
+                <table class="table-auto w-full border-separate border-spacing-y-2" id="logs-table">
                     <tbody id="logs-cards"></tbody>
                 </table>
             </div>
@@ -103,7 +101,7 @@
     </section>
 
     <!-- Modal detalhado -->
-    <div id="log-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div id="log-modal" class="fixed inset-0 bg-white bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white rounded-lg shadow p-6 max-w-md w-full relative">
             <button id="close-modal" class="absolute top-2 right-2 text-gray-600">&times;</button>
             <h2 class="text-xl font-bold mb-4">Detalhes do Log</h2>
@@ -139,24 +137,22 @@
             });
 
             function buildRow(log) {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50 cursor-pointer';
+                const tr = document.createElement('div');
+                tr.className = 'flex flex-row justify-between items-center bg-white rounded-lg hover:shadow-xl transition duration-300 border border-gray-200 px-5 py-2 mt-3 mb-3 cursor-pointer';
 
                 tr.innerHTML = `
-                    <td class="px-4 py-2 font-medium">${log.user?.name ?? 'N/A'}</td>
-                    <td class="px-4 py-2">${log.user?.unidade?.cidade ?? 'N/A'}</td>
-                    <td class="px-4 py-2">
-                        <span class="px-2 py-0.5 rounded font-semibold text-xs
+                    <div class="px-2 py-5 gap-4 items-center">
+                        <div class="px-2 py-0.5 rounded font-semibold
                             ${log.action === 'login' ? 'bg-green-100 text-green-700' : ''}
                             ${log.action === 'logout' ? 'bg-red-100 text-red-700' : ''}
                             ${log.action === 'change_password' ? 'bg-blue-100 text-blue-700' : ''}
                             ${log.action === 'reset_password' ? 'bg-yellow-100 text-yellow-700' : ''}">
                             ${log.action}
-                        </span>
-                    </td>
-                    <td class="px-4 py-2 truncate max-w-xs">${log.description ?? '-'}</td>
-                    <td class="px-4 py-2">${log.ip_address ?? '-'}</td>
-                    <td class="px-4 py-2">${new Date(log.created_at).toLocaleString()}</td>
+                        </div>
+                    </div>
+                    <div class="px-4 py-5 font-medium rounded-lg">${log.user?.name ?? 'N/A'}</div>
+                    <div class="px-4 py-5">${log.user?.unidade?.cidade ?? 'N/A'}</div>
+                    <div class="px-1 py-5 rounded-lg">${new Date(log.created_at).toLocaleString()}</div>
                 `;
 
                 tr.addEventListener('click', () => openModal(log));
@@ -237,42 +233,49 @@
         });
     </script>
 
-    {{-- Grafico de acessos --}}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const hourly = @json($hourly);
-            const actions = [...new Set(hourly.map(h => h.action))];
-            const hours = [...Array(24).keys()];
-            const datasets = actions.map(action => ({
-                label: action,
-                data: hours.map(h => {
-                    const row = hourly.find(r => r.hour === h && r.action === action);
-                    return row ? row.total : 0;
-                }),
-                fill: false,
-                borderWidth: 2
-            }));
+{{-- Grafico de acessos --}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const hourly = @json($hourly);
+        const actions = [...new Set(hourly.map(h => h.action))];
+        const hours = [...Array(24).keys()].filter(h => h % 2 === 0); // [0, 2, 4, ...]
 
-            new Chart(document.getElementById('accessChart'), {
-                type: 'line',
-                data: {
-                    labels: hours.map(h => h + ":00"),
-                    datasets
+        // Paleta de cores customizada
+        const colors = {
+            logout: '#166534',   // green-800
+            login: '#16a34a'  // green-600
+        };
+
+        const datasets = actions.map(action => ({
+            label: action,
+            data: hours.map(h => {
+                const row = hourly.find(r => r.hour === h && r.action === action);
+                return row ? row.total : 0;
+            }),
+            backgroundColor: colors[action] || '#ccc', // fallback cinza
+            borderWidth: 0
+        }));
+
+        new Chart(document.getElementById('accessChart'), {
+            type: 'bar',
+            data: {
+                labels: hours.map(h => h + ":00"),
+                datasets
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
                 },
-                options: {
-                    responsive: true,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
+                scales: {
+                    y: {
+                        beginAtZero: true
                     }
                 }
-            });
+            }
         });
-    </script>
+    });
+</script>
 @endsection

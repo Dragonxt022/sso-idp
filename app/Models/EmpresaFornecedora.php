@@ -12,7 +12,6 @@ class EmpresaFornecedora extends Model
     protected $table = 'empresas_fornecedoras';
 
     protected $fillable = [
-        'user_id',
         'cnpj',
         'razao_social',
         'nome_fantasia',
@@ -26,8 +25,10 @@ class EmpresaFornecedora extends Model
         'logo',
     ];
 
-    public function user()
+    public function fornecedores()
     {
-        return $this->belongsTo(User::class);
+        // todos os users com empresa_fornecedora_id = id desta empresa
+        return $this->hasMany(User::class, 'empresa_fornecedora_id');
     }
 }
+

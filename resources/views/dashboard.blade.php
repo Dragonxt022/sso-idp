@@ -14,6 +14,7 @@
 
                 <div class="text-green-700 text-xl font-semibold group-hover:text-green-600 transition-colors duration-300">
                     Olá, {{ $user->name }}
+
                 </div>
             </div>
             <div>
@@ -35,6 +36,7 @@
                 id="search" onkeyup="filtraApps()">
         </div>
     </div>
+
 
     <div id="cards"
         class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 opacity-0 translate-y-4 transition-all duration-700">

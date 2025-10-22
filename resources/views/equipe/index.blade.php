@@ -5,7 +5,7 @@
         <div id="cards" class="flex flex-col gap-5">
 
             <!-- Cabeçalho -->
-            <div class="flex flex-row justify-between items-center">
+            <div id="user-bar" class="flex flex-row justify-between items-center opacity-0 translate-y-4 transition-all duration-700">
                 <!-- Breadcrumb -->
                 <div class="hidden md:flex flex-row justify-start items-center gap-4">
                     <div class="text-gray-700 text-lg font-semibold hover:text-green-700 transition-all duration-200">
@@ -27,7 +27,7 @@
             </div>
 
             <!-- Cards de Usuários card inteiro deve ser clicável pra abrir tela de info -->
-            <div class="flex flex-col gap-4 mb-16">
+            <div id="agenda" class="flex flex-col gap-4 mb-16 opacity-0 translate-y-4 transition-all duration-700">
                 @if ($users->isEmpty())
                     <div class="text-center text-gray-500 py-10">
                         Nenhum colaborador encontrado.
@@ -35,21 +35,23 @@
                 @else
                     @foreach ($users as $user)
                         <div id="user-{{ $user->id }}"
-                            class="bg-white border border-gray-200 rounded-xl py-6 px-8 hover:border-gray-100 hover:shadow-xl transition duration-300 flex flex-row items-center justify-between cursor-pointer group">
+                            class="bg-white border border-gray-200 rounded-xl py-6 px-8 hover:border-gray-100 {{ $user->status === 'demitido' ? 'hover:shadow-sm' : 'hover:shadow-xl ' }} transition duration-300 flex flex-row items-center justify-between cursor-pointer group">
 
                             <div class="flex flex-row items-center gap-4">
                                 <div class="w-12 h-12 flex items-center justify-center">
                                     <img src="{{ $user->profile_photo_path ? asset('frontend/profiles/' . $user->profile_photo_path) : asset('frontend/img/user.png') }}"
                                         onerror="this.onerror=null;this.src='{{ asset('frontend/img/user.png') }}';"
-                                        class="w-12 h-12 rounded-full group-hover:scale-105 group-hover:shadow-md transition-all duration-700" />
+                                        class="w-12 h-12 rounded-full transition-all duration-700 {{ $user->status === 'demitido' ? 'opacity-50 group-hover:shadow-sm' : 'opacity-100 group-hover:scale-105 group-hover:shadow-md' }}" />
                                 </div>
                                 <div class="text-left">
-                                    <h3 class="text-md font-medium text-gray-700">{{ $user->name }}</h3>
-                                    <p class="text-sm text-gray-500">{{ $user->email }}</p>
+                                        <h3 class="text-md font-medium {{ $user->status === 'demitido' ? 'text-gray-400' : 'text-gray-700' }}">
+                                            {{ $user->name }}
+                                        </h3>
+                                    <p class="text-sm {{ $user->status === 'demitido' ? 'text-gray-300' : 'text-gray-500' }}">{{ $user->email }}</p>
                                 </div>
                             </div>
 
-                            <img src="{{ asset('frontend/img/seta.png') }}" class="w-6 h-6">
+                            <img src="{{ asset('frontend/img/seta.png') }}" class="w-6 h-6 {{ $user->status === 'demitido' ? 'opacity-50' : 'opacity-100' }}">
                         </div>
                     @endforeach
                 @endif

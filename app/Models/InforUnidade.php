@@ -20,6 +20,9 @@ class InforUnidade extends Model
         'rua',
         'numero',
         'cnpj',
+        'status',
+        'telefone',
+        'link_cardapio',
     ];
 
     // Campos que aparecem no JSON

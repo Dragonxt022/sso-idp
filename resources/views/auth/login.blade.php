@@ -16,7 +16,7 @@
 
     <!-- Coluna da Imagem (oculta em telas pequenas) -->
     <div id="background"
-        class="hidden md:flex w-2/5 bg-cover bg-no-repeat bg-left opacity-0 transition-opacity duration-700 ease-in-out"
+        class="hidden md:flex w-2/5 bg-green-700 bg-cover bg-no-repeat bg-left opacity-0 transition-opacity duration-700 ease-in-out"
         style="background-image: url('{{ daily_background() }}')">
         <!-- Logo no canto -->
         <div class="absolute top-6 left-6">

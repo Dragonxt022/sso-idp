@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Laravel\Passport\Token;
+use Spatie\Permission\Models\Role;
 use App\Models\User;
 use App\Models\Application; // no topo do controller
-
+use App\Models\InforUnidade;
 
 class DashboardController extends Controller
 {
@@ -32,24 +33,49 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        // Recupera o token JWT que foi criado no login
-        // Passport cria um "accessToken" ao gerar o token
+        // Pega o token ativo
         $tokenResult = $user->tokens()->where('revoked', false)->latest()->first();
-
         $token = $tokenResult ? $tokenResult->id : null;
 
-        // Pega o grupo e nome da cidade do user
         $grupo = $user->getRoleNames()->first();
-        $cidade = $user->unidade->cidade;
+        $cidade = $user->unidade->cidade ?? 'Sem unidade';
+
+        // Recupera todas as roles do guard 'api'
+        $roles = Role::where('guard_name', 'api')->get();
+
+        // Recupera todas as unidades para o seletor
+        $unidades = InforUnidade::orderBy('cidade')->get(['id', 'cidade']);
+
+        // Retorna a view com todas as variáveis
+        return view('perfil', compact('user', 'token', 'grupo', 'cidade', 'roles', 'unidades'));
+    }
 
 
-        // IMPORTANTE: se você quiser o plainTextToken, precisa salvar no login em session
-        // no login, depois de criar o token:
-        // session(['user_token' => $tokenResult->accessToken]);
+    public function updateRole(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
 
-        // Aqui você pega da session
-        $token = session('user_token');
+        $request->validate([
+            'role_id' => 'required|exists:roles,id'
+        ]);
 
-        return view('perfil', compact('user', 'token', 'grupo', 'cidade'));
+        $role = Role::where('id', $request->role_id)
+            ->where('guard_name', 'api')
+            ->first();
+
+        if (!$role) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Role não encontrada no guard API'
+            ], 404);
+        }
+
+        $user->syncRoles([$role]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Cargo atualizado com sucesso!',
+            'role' => $role->name
+        ]);
     }
 }

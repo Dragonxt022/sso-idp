@@ -13,7 +13,7 @@
 
     <!-- Scripts -->
     <script src="{{ asset('frontend/js/index.js?v1') }}" defer></script>
-    <link href="{{ asset('frontend/css/global.css') }}" rel="stylesheet">
+    <link href="{{ asset('frontend/css/global.css?v003') }}" rel="stylesheet">
 
 </head>
 
@@ -21,18 +21,26 @@
 
     {{-- Header --}}
     <header id="header"
-        class="fixed top-0 left-0 w-full z-30 flex items-center justify-between py-6 px-8 bg-white shadow-sm  opacity-0 -translate-y-6 transition-all duration-[1200ms]">
+        class="fixed top-0 left-0 w-full z-30 flex items-center justify-between py-6 px-8 bg-white shadow-sm opacity-0 -translate-y-6 transition-all duration-[1200ms]">
+
         <a href="/"><img src="{{ asset('frontend/img/logo.png') }}" class="h-6"></a>
-        <div class="relative">
-            <form class="h-6 w-6" method="POST" action="{{ route('logout') }}">
+
+        <div class="flex items-center gap-4">
+            {{-- Nome da cidade --}}
+            <span class="text-gray-500 font-medium bg-gray-50 text-sm rounded-md px-3 py-1">
+                {{ $user->unidade->cidade ?? 'Sem unidade' }}
+            </span>
+
+            {{-- Botão de logout --}}
+            <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" id="logout">
-                    <img src="{{ asset('frontend/img/logout.png') }}"class="w-6 h-6 cursor-pointer">
+                    <img src="{{ asset('frontend/img/logout.png') }}" class="w-6 h-6 cursor-pointer">
                 </button>
             </form>
-
         </div>
     </header>
+
 
 
     {{-- Conteúdo principal --}}

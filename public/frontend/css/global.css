@@ -1,5 +1,3 @@
-body { font-family: 'Figtree', sans-serif; }
-
 @media (max-width: 500px) {
       .card {
         @apply bg-transparent shadow-none;
@@ -18,4 +16,9 @@ body { font-family: 'Figtree', sans-serif; }
 
 body {
   background-color: #F3F8F3;
+  user-select: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  font-family: 'Figtree', sans-serif;
 }

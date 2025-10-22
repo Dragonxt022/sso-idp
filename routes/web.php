@@ -73,6 +73,8 @@ Route::middleware(['auth', 'checkUserStatus'])->group(function () {
     // Gestão de equipe
     Route::get('/equipe', [UserEquipeController::class, 'index'])->name('equipe.index');
     Route::get('/equipe/create', [UserEquipeController::class, 'create'])->name('equipe.create');
+    Route::get('/equipe/{id}/edit', [UserEquipeController::class, 'edit'])->name('equipe.edit');
+    Route::put('/equipe/{id}', [UserEquipeController::class, 'update'])->name('equipe.update');
     Route::post('/equipe', [UserEquipeController::class, 'store'])->name('equipe.store');
     Route::get('/equipe/{id}', [UserEquipeController::class, 'show'])->name('equipe.show');
 
@@ -80,6 +82,11 @@ Route::middleware(['auth', 'checkUserStatus'])->group(function () {
     Route::post('/user/{user}/regenerate-pin', [UserEquipeController::class, 'regeneratePin'])->name('user.regenerate-pin');
     Route::post('/user/{user}/toggle-permission', [UserEquipeController::class, 'togglePermission'])->name('user.toggle-permission');
     Route::post('/user/{id}/update-role', [UserEquipeController::class, 'updateRole'])->name('user.update-role');
+
+    // Rota para atualizar unidade do usuário
+    Route::post('/user/{id}/update-unidade', [UserEquipeController::class, 'updateUnidade'])
+        ->name('user.update-unidade');
+    Route::get('/unidades/listar', [UserEquipeController::class, 'listarUnidades']);
 
     // rota para demissão
     Route::post('/user/{user}/toggle-status', [UserEquipeController::class, 'toggleStatus'])->name('user.toggle-status');
@@ -90,6 +97,8 @@ Route::middleware(['auth', 'checkUserStatus'])->group(function () {
 
     // Perfil do usuário
     Route::get('/perfil', [DashboardController::class, 'perfil'])->name('perfil');
+
+    Route::post('/user/{id}/update-role', [DashboardController::class, 'updateRole'])->name('user.update-role');
 
     // Alterar senha
     Route::post('/user/change-password', [AuthController::class, 'changePassword'])->name('user.change-password');
@@ -121,6 +130,5 @@ Route::middleware(['auth', 'checkUserStatus'])->group(function () {
         // Rota API para buscar os logs de erro de forma assíncrona
         Route::get('/auditoria/erros/fetch', [ErrorLogController::class, 'fetch'])->name('auditoria.erros.fetch');
         Route::delete('/auditoria/erros/clear', [ErrorLogController::class, 'clearLogs'])->name('auditoria.erros.clear');
-
     });
 });

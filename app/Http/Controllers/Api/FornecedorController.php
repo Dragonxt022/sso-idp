@@ -12,6 +12,7 @@ use App\Services\ImageService;
 
 class FornecedorController extends Controller
 {
+    // Lista todos os fornecedores
     public function index()
     {
         // Lista todos usuários com role Fornecedor
@@ -19,19 +20,22 @@ class FornecedorController extends Controller
         return response()->json($fornecedores, 200);
     }
 
+    // Mostrar detalhes de um fornecedor específico
     public function show($id)
     {
         $fornecedor = User::role('Fornecedor')->findOrFail($id);
         return response()->json($fornecedor, 200);
     }
 
+    // Criar novo fornecedor
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'cpf' => 'required|string|max:14|unique:users,cpf',
-            'profile_photo_path' => 'nullable|image|mimes:png,jpg,jpeg|max:2048',
+            'empresa_fornecedora_id' => 'required|exists:empresas_fornecedoras,id', // novo campo
+            'profile_photo_path' => 'nullable|file|image',
             'permission_ids' => 'nullable|array',
             'permission_ids.*' => 'exists:permissions,id',
             'password' => 'required|string|min:8|confirmed',
@@ -46,12 +50,12 @@ class FornecedorController extends Controller
             'email' => $validated['email'],
             'cpf' => $validated['cpf'],
             'unidade_id' => auth()->user()->unidade_id ?? null,
+            'empresa_fornecedora_id' => $validated['empresa_fornecedora_id'], // salva relacionamento
             'profile_photo_path' => $photoName,
             'password' => Hash::make($validated['password']),
             'pin' => $this->generateUniquePin(),
         ]);
 
-        // atribuir sempre a role Fornecedor
         $role = Role::where('name', 'Fornecedor')->where('guard_name', 'api')->first();
         if ($role) {
             $user->syncRoles([$role]);
@@ -68,6 +72,7 @@ class FornecedorController extends Controller
         ], 201);
     }
 
+    // Atualizar fornecedor
     public function update(Request $request, $id)
     {
         $fornecedor = User::role('Fornecedor')->findOrFail($id);
@@ -76,10 +81,12 @@ class FornecedorController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|email|unique:users,email,' . $fornecedor->id,
             'cpf' => 'sometimes|required|string|max:14|unique:users,cpf,' . $fornecedor->id,
-            'profile_photo_path' => 'nullable|image|mimes:png,jpg,jpeg|max:2048',
+            'profile_photo_path' => 'nullable',
             'permission_ids' => 'nullable|array',
             'permission_ids.*' => 'exists:permissions,id',
             'password' => 'nullable|string|min:8|confirmed',
+            'empresa_fornecedora_id' => 'sometimes|required|exists:empresas_fornecedoras,id',
+
         ]);
 
         if ($request->filled('cpf')) {
@@ -110,6 +117,7 @@ class FornecedorController extends Controller
         ], 200);
     }
 
+    // Atualizar status do fornecedor
     public function updateStatus(Request $request, $id)
     {
         $fornecedor = User::role('Fornecedor')->findOrFail($id);
@@ -127,7 +135,7 @@ class FornecedorController extends Controller
         ], 200);
     }
 
-
+    // Excluir fornecedor
     public function destroy($id)
     {
         $fornecedor = User::role('Fornecedor')->findOrFail($id);
@@ -136,6 +144,7 @@ class FornecedorController extends Controller
         return response()->json(['message' => 'Fornecedor excluído com sucesso!'], 200);
     }
 
+    // Método para gerar um PIN único
     protected function generateUniquePin($length = 4)
     {
         do {
